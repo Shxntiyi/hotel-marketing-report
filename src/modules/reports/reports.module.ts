@@ -1,11 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ReportsService } from './reports.service';
+import { ReportPdfService } from './report-pdf.service'; // <--- Importar
 import { ReportsController } from './reports.controller';
-import { CloudbedsModule } from '../cloudbeds/cloudbeds.module'; // Importante
+import { CloudbedsModule } from '../cloudbeds/cloudbeds.module';
 
 @Module({
-  imports: [CloudbedsModule], // Traemos el módulo que exporta CloudbedsService
+  imports: [CloudbedsModule],
   controllers: [ReportsController],
-  providers: [ReportsService],
+  providers: [
+    ReportsService, 
+    ReportPdfService // <--- Agregar a providers
+  ], 
 })
 export class ReportsModule {}
