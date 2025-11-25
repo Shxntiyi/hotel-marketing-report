@@ -1,15 +1,18 @@
 import { Module } from '@nestjs/common';
 import { ReportsService } from './reports.service';
-import { ReportPdfService } from './report-pdf.service'; // <--- Importar
+import { ReportPdfService } from './report-pdf.service';
 import { ReportsController } from './reports.controller';
 import { CloudbedsModule } from '../cloudbeds/cloudbeds.module';
+import { MailModule } from '../mail/mail.module';
+import { MailService } from '../mail/mail.service';
 
 @Module({
-  imports: [CloudbedsModule],
+  imports: [CloudbedsModule, MailModule],
   controllers: [ReportsController],
   providers: [
     ReportsService, 
-    ReportPdfService // <--- Agregar a providers
+    ReportPdfService,
+    MailService
   ], 
 })
 export class ReportsModule {}

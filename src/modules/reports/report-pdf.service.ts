@@ -1,97 +1,84 @@
 import { Injectable } from '@nestjs/common';
 import PDFDocument from 'pdfkit-table';
 import { MonthlyReport } from './interfaces/report.interface';
-import { Response } from 'express';
 
 @Injectable()
 export class ReportPdfService {
 
-    async generatePdf(report: MonthlyReport, res: Response) {
-        const pdf = new PDFDocument({
-            margin: 50,
-            size: 'A4',
-            bufferPages: true
-        });
+    // YA NO RECIBE "res" (Response), AHORA DEVUELVE UN BUFFER
+    async generatePdf(report: MonthlyReport): Promise<Buffer> {
+        return new Promise((resolve, reject) => {
 
-        const fileName = `Reporte_${report.period.replace(' ', '_')}.pdf`;
-        res.set({
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename="${fileName}"`,
-        });
-        pdf.pipe(res);
+            const pdf = new PDFDocument({
+                margin: 50,
+                size: 'A4',
+                bufferPages: true
+            });
 
-        // --- DISEÑO ---
+            // Capturamos los datos en un buffer en memoria
+            const chunks: Buffer[] = [];
+            pdf.on('data', (chunk) => chunks.push(chunk));
+            pdf.on('end', () => {
+                const result = Buffer.concat(chunks);
+                resolve(result);
+            });
+            pdf.on('error', (err) => reject(err));
 
-        // 1. CABECERA
-        pdf
-            .fillColor('#6366f1')
-            .fontSize(20)
-            .text('INFORME DE COMISIONES', { align: 'left' })
-            .moveDown(0.2);
+            // --- AQUÍ EMPIEZA EL DISEÑO (IGUAL QUE ANTES) ---
 
-        pdf
-            .fillColor('#6b7280')
-            .fontSize(10)
-            .text(`Generado automáticamente el: ${new Date().toLocaleDateString()}`, { align: 'left' });
+            // 1. CABECERA
+            pdf.fillColor('#6366f1').fontSize(20).text('INFORME DE COMISIONES', { align: 'left' }).moveDown(0.2);
+            pdf.fillColor('#6b7280').fontSize(10).text(`Generado el: ${new Date().toLocaleDateString()}`, { align: 'left' });
+            pdf.moveDown(2);
 
-        pdf.moveDown(2);
+            // 2. TARJETAS
+            this.drawSummaryCard(pdf, 50, 130, 'VENTAS TOTALES', `$${report.totalSales.toFixed(2)}`, '#10b981');
+            this.drawSummaryCard(pdf, 200, 130, 'TU COMISIÓN (5%)', `$${report.totalCommission.toFixed(2)}`, '#6366f1');
+            this.drawSummaryCard(pdf, 350, 130, 'RESERVAS', `${report.items.length}`, '#1f2937');
+            pdf.moveDown(6);
 
-        // 2. TARJETAS (Resumen)
-        this.drawSummaryCard(pdf, 50, 130, 'VENTAS TOTALES', `$${report.totalSales.toFixed(2)}`, '#10b981');
-        this.drawSummaryCard(pdf, 200, 130, 'TU COMISIÓN (5%)', `$${report.totalCommission.toFixed(2)}`, '#6366f1');
-        this.drawSummaryCard(pdf, 350, 130, 'RESERVAS', `${report.items.length}`, '#1f2937');
+            // 3. TABLA
+            pdf.fillColor('#1f2937').fontSize(12).text(`Detalle de Reservas: ${report.period}`, { align: 'left' });
+            pdf.moveDown(1);
 
-        pdf.moveDown(6);
-
-        // 3. TÍTULO DE TABLA
-        pdf
-            .fillColor('#1f2937')
-            .fontSize(12)
-            .text(`Detalle de Reservas: ${report.period}`, { align: 'left' });
-
-        pdf.moveDown(1);
-
-        // 4. CONFIGURACIÓN DE LA TABLA (Aquí estaba el problema)
-        const table = {
-            title: '', // Dejar vacío para no duplicar título
-            headers: [
-                // Ajustamos los anchos para que sumen aprox 490-500px y encajen perfecto
-                { label: 'ID', property: 'id', width: 90 },
-                { label: 'HUÉSPED', property: 'guest', width: 160 }, // Más espacio para nombres largos
-                { label: 'CHECK-OUT', property: 'checkout', width: 70 },
-                { label: 'TOTAL', property: 'total', width: 80, align: 'right' },
-                { label: 'COMISIÓN', property: 'commission', width: 90, align: 'right' },
-            ],
-            datas: report.items.map(item => ({
+            const table = {
+                title: '',
+                headers: [
+                { label: 'ID', property: 'id', width: 70 }, // Reducimos un poco
+                { label: 'FUENTE', property: 'source', width: 90 }, // <--- NUEVA COLUMNA
+                { label: 'HUÉSPED', property: 'guest', width: 130 },
+                { label: 'CHECK-OUT', property: 'checkout', width: 60 },
+                { label: 'TOTAL', property: 'total', width: 70, align: 'right' },
+                { label: 'COMISIÓN', property: 'commission', width: 70, align: 'right' },
+                ],
+                datas: report.items.map(item => ({
                 id: item.reservationId,
+                source: item.source, // <--- Mapeamos el dato
                 guest: item.guestName,
                 checkout: item.checkOut,
                 total: `$${item.grandTotal.toFixed(2)}`,
                 commission: `$${item.commission.toFixed(2)}`,
-            })),
-        };
-        // Renderizar la tabla forzando posición y ancho
-        await pdf.table(table, {
-            width: 490, // <--- FORZAMOS EL ANCHO TOTAL
-            x: 50,      // <--- FORZAMOS QUE EMPIECE EN EL MARGEN IZQUIERDO
-            prepareHeader: () => pdf.font('Helvetica-Bold').fontSize(9).fillColor('#374151'),
-            prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => {
-                pdf.font('Helvetica').fontSize(9).fillColor('#4b5563');
-                // Efecto cebra
-                if (indexRow && indexRow % 2 !== 0) {
-                    (pdf as any).addBackground(rectRow, '#f9fafb', 0.5);
-                }
-                return pdf;
-            },
+                })),
+            };
+
+            // Nota: Como estamos dentro de una Promise, el await de la tabla debe manejarse con cuidado
+            // pdfkit-table a veces no soporta await dentro de flujos síncronos de buffer, 
+            // pero probemos así. Si falla, quitamos el await y usamos callback.
+            pdf.table(table, {
+                width: 490,
+                x: 50,
+                prepareHeader: () => pdf.font('Helvetica-Bold').fontSize(9).fillColor('#374151'),
+                prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => {
+                    pdf.font('Helvetica').fontSize(9).fillColor('#4b5563');
+                    if (indexRow !== undefined && indexRow % 2 !== 0) (pdf as any).addBackground(rectRow, '#f9fafb', 0.5);
+                    return pdf;
+                },
+            }).then(() => {
+                // FOOTER Y FIN
+                pdf.fontSize(8).fillColor('#9ca3af').text('Reporte oficial.', 50, 750, { align: 'center', width: 500 });
+                pdf.end(); // ¡IMPORTANTE! Aquí cerramos el PDF
+            });
         });
-
-        // FOOTER
-        pdf
-            .fontSize(8)
-            .fillColor('#9ca3af')
-            .text('Este reporte fue generado basado en la data oficial de Cloudbeds.', 50, 750, { align: 'center', width: 500 });
-
-        pdf.end();
     }
 
     private drawSummaryCard(doc: PDFDocument, x: number, y: number, title: string, value: string, accentColor: string) {

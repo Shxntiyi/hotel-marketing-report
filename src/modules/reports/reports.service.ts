@@ -9,7 +9,12 @@ export class ReportsService {
 
     // CONFIGURACIÓN
     // Cuando termines las pruebas, cambia 'Walk-In' por el nombre real (ej: 'Agencia_Marketing')
-    private readonly TARGET_SOURCE = 'Walk-In';
+     private readonly TARGET_SOURCES = [
+    'Google ADS',
+    'Google SEO Organico',
+    'Social Media Organico',
+    'Facebook ADS'
+  ]; 
     private readonly COMMISSION_RATE = 0.05;
 
     constructor(private readonly cloudbedsService: CloudbedsService) { }
@@ -35,7 +40,7 @@ export class ReportsService {
             const currentSource = res.sourceName || 'Direct';
 
             // Si coincide con nuestra fuente objetivo...
-            if (currentSource === this.TARGET_SOURCE) {
+            if (this.TARGET_SOURCES.includes(currentSource)) {
 
                 try {
                     // 4. ¡MAGIA! Pedimos el detalle completo para obtener el PRECIO REAL
