@@ -81,4 +81,8 @@ export class CloudbedsService {
     // si no, la API suele responder sin él si el usuario solo tiene un hotel.
     return undefined; 
   }
+
+  async getReservationDetails(reservationId: string) {
+  return this.makeRequest('GET', '/getReservation', { reservationID: reservationId });
+}
 }

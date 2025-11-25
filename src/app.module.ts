@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './modules/auth/auth.module';
 import { CloudbedsModule } from './modules/cloudbeds/cloudbeds.module';
-// import { ReportsModule } from './modules/reports/reports.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 @Module({
   imports: [
@@ -16,7 +16,7 @@ import { CloudbedsModule } from './modules/cloudbeds/cloudbeds.module';
    
     AuthModule,
     CloudbedsModule,
-    // ReportsModule,
+    ReportsModule,
   ],
 })
 export class AppModule {}
