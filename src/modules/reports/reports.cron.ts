@@ -53,7 +53,7 @@ export class ReportsCron {
     try {
       const reportData = await this.reportsService.generateReportByDates(start, end, title);
       const pdfBuffer = await this.pdfService.generatePdf(reportData);
-      const targetEmail = this.configService.get('MAIL_USER');
+      const targetEmail = this.configService.get('MAIL_TO'); 
       
       await this.mailService.sendReport(targetEmail, pdfBuffer, title);
       this.logger.log(`✅ ${title} enviado correctamente a ${targetEmail}`);

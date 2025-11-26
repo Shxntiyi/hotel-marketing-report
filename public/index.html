@@ -286,7 +286,7 @@
 
         <div class="control-group">
             <label>Enviar copia a (Email)</label>
-            <input type="email" id="email" placeholder="cliente@hotel.com">
+            <input type="email" id="email" placeholder="Dejar vacío para usar correo predeterminado">
         </div>
 
         <button class="btn btn-primary" onclick="downloadPDF()">
@@ -384,7 +384,6 @@
             const month = document.getElementById('month').value;
             const year = document.getElementById('year').value;
             const email = document.getElementById('email').value;
-            if (!email) return showStatus('⚠️ Ingresa un email', 'error');
 
             toggleLoading('email', true);
             try {

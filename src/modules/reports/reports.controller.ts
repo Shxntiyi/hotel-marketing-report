@@ -1,4 +1,5 @@
 import { Controller, Get, Query, Res } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 import { ReportsService } from './reports.service';
 import { ReportPdfService } from './report-pdf.service';
@@ -9,10 +10,10 @@ export class ReportsController {
   constructor(
     private readonly reportsService: ReportsService,
     private readonly reportPdfService: ReportPdfService,
-    private readonly mailService: MailService
+    private readonly mailService: MailService,
+     private readonly configService: ConfigService
   ) { }
 
-  // Descargar PDF manualmente (Por mes)
   @Get('download')
   async downloadReport(
     @Query('month') month: number,
@@ -30,18 +31,24 @@ export class ReportsController {
     res.send(pdfBuffer);
   }
 
-  // Forzar envío de email (Por mes)
-  @Get('send-email')
+  
+   @Get('send-email')
   async sendEmailReport(
-    @Query('month') month: number,
+    @Query('month') month: number, 
     @Query('year') year: number,
-    @Query('email') email: string
+    @Query('email') email?: string 
   ) {
+    const targetEmail = email || this.configService.get('MAIL_TO');
+
+    if (!targetEmail) {
+        return { success: false, message: 'Error: No hay destinatario configurado en .env ni en la URL' };
+    }
+
     const data = await this.reportsService.generateMonthlyReport(year, month);
     const pdfBuffer = await this.reportPdfService.generatePdf(data);
+    
+    await this.mailService.sendReport(targetEmail, pdfBuffer, data.period);
 
-    await this.mailService.sendReport(email, pdfBuffer, data.period);
-
-    return { success: true, message: `Reporte enviado a ${email}` };
+    return { success: true, message: `Reporte enviado a ${targetEmail}` };
   }
 }
