@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Control Center</title>
+    <style>
+        /* --- VARIABLES DE TEMA --- */
+        :root {
+            /* Colores Light Mode */
+            --bg-color: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --card-bg: rgba(255, 255, 255, 0.65); /* Transparente para efecto vidrio */
+            --card-border: rgba(255, 255, 255, 0.8);
+            --input-bg: rgba(255, 255, 255, 0.8);
+            --input-border: transparent;
+            --primary: #6366f1;
+            --primary-text: #ffffff;
+            --blob-1: #c7d2fe; /* Azul suave */
+            --blob-2: #fbcfe8; /* Rosa suave */
+            
+            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            /* Colores Dark Mode */
+            --bg-color: #0f172a;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --card-bg: rgba(30, 41, 59, 0.60); /* Vidrio oscuro */
+            --card-border: rgba(255, 255, 255, 0.1);
+            --input-bg: rgba(15, 23, 42, 0.6);
+            --input-border: rgba(255, 255, 255, 0.1);
+            --primary: #818cf8;
+            --primary-text: #0f172a;
+            --blob-1: #4338ca; /* Azul intenso */
+            --blob-2: #be185d; /* Rosa intenso */
+            
+            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- ESTILOS GENERALES --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden; /* Para que los blobs no estiren la página */
+            transition: background-color 0.5s ease;
+            position: relative;
+        }
+
+        /* --- EFECTO DE FONDO (BLOBS) --- */
+        .background-blobs {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px); /* EL EFECTO BLUR FUERTE */
+            opacity: 0.6;
+            transition: all 1s ease;
+            animation: float 10s infinite ease-in-out alternate;
+        }
+
+        .blob-1 {
+            width: 400px; height: 400px;
+            background: var(--blob-1);
+            top: -100px; left: -100px;
+        }
+
+        .blob-2 {
+            width: 300px; height: 300px;
+            background: var(--blob-2);
+            bottom: -50px; right: -50px;
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 50px) scale(1.1); }
+        }
+
+        /* --- TARJETA GLASSMORPHISM --- */
+        .card {
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            border-radius: 32px;
+            
+            /* LA MAGIA DEL VIDRIO */
+            background: var(--card-bg);
+            backdrop-filter: blur(20px); /* Desenfoca lo que está detrás */
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            box-shadow: var(--shadow);
+            
+            color: var(--text-main);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        /* --- HEADER & TOGGLE --- */
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            margin: 5px 0 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Botón de cambio de tema */
+        .theme-toggle {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .theme-toggle:hover { transform: scale(1.1); }
+        .theme-toggle svg { width: 20px; height: 20px; fill: currentColor; }
+
+        /* --- FORMULARIOS --- */
+        .control-group { margin-bottom: 20px; }
+        
+        label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .row { display: flex; gap: 15px; }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border-radius: 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            outline: none;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+        input:focus, select:focus {
+            box-shadow: 0 0 0 2px var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* --- BOTONES --- */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 18px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .btn:active { transform: scale(0.98); }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--primary-text);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--input-bg);
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+        }
+
+        /* --- NOTIFICACIONES --- */
+        #status {
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            text-align: center;
+            display: none;
+            margin-top: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .success { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .error { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+        
+        /* Spinner */
+        .spinner {
+            width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: currentColor;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <!-- Blobs de fondo para el efecto borroso -->
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="card">
+        <div class="header-row">
+            <div>
+                <h1>Panel de Reportes</h1>
+                <p class="subtitle">Gestión de Comisiones Marketing</p>
+            </div>
+            <!-- Botón Dark/Light Mode -->
+            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">
+                <svg id="icon-moon" viewBox="0 0 24 24" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                <svg id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            </button>
+        </div>
+
+        <div class="control-group">
+            <div class="row">
+                <div style="flex: 2;">
+                    <label>Mes</label>
+                    <select id="month">
+                        <option value="1">Enero</option>
+                        <option value="2">Febrero</option>
+                        <option value="3">Marzo</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Mayo</option>
+                        <option value="6">Junio</option>
+                        <option value="7">Julio</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Septiembre</option>
+                        <option value="10">Octubre</option>
+                        <option value="11">Noviembre</option>
+                        <option value="12">Diciembre</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label>Año</label>
+                    <input type="number" id="year">
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>Enviar copia a (Email)</label>
+            <input type="email" id="email" placeholder="cliente@hotel.com">
+        </div>
+
+        <button class="btn btn-primary" onclick="downloadPDF()">
+            <span class="spinner" id="spin-download"></span>
+            <span id="txt-download">Descargar PDF</span>
+        </button>
+
+        <button class="btn btn-secondary" onclick="sendEmail()">
+            <span class="spinner" id="spin-email"></span>
+            <span id="txt-email">Enviar por Email</span>
+        </button>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // --- LÓGICA DE TEMA (DARK/LIGHT) ---
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            updateIcon(next);
+            localStorage.setItem('theme', next); // Guardar preferencia
+        }
+
+        function updateIcon(theme) {
+            document.getElementById('icon-sun').style.display = theme === 'dark' ? 'none' : 'block';
+            document.getElementById('icon-moon').style.display = theme === 'dark' ? 'block' : 'none';
+        }
+
+        // Cargar preferencia guardada
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateIcon(savedTheme);
+
+
+        // --- LÓGICA DEL APP ---
+        const today = new Date();
+        document.getElementById('month').value = today.getMonth() + 1;
+        document.getElementById('year').value = today.getFullYear();
+        const API_URL = ''; // Relativo al dominio actual
+
+        function showStatus(msg, type) {
+            const el = document.getElementById('status');
+            el.style.display = 'block';
+            el.className = type;
+            el.innerText = msg;
+            setTimeout(() => el.style.display = 'none', 5000);
+        }
+
+        function toggleLoading(btnType, isLoading) {
+            const btn = btnType === 'download' ? document.querySelector('.btn-primary') : document.querySelector('.btn-secondary');
+            const txt = document.getElementById(`txt-${btnType}`);
+            const spin = document.getElementById(`spin-${btnType}`);
+
+            if (isLoading) {
+                btn.style.opacity = 0.7;
+                btn.style.pointerEvents = 'none';
+                txt.style.display = 'none';
+                spin.style.display = 'block';
+            } else {
+                btn.style.opacity = 1;
+                btn.style.pointerEvents = 'auto';
+                txt.style.display = 'block';
+                spin.style.display = 'none';
+            }
+        }
+
+        async function downloadPDF() {
+            const month = document.getElementById('month').value;
+            const year = document.getElementById('year').value;
+            toggleLoading('download', true);
+
+            try {
+                const response = await fetch(`${API_URL}/reports/download?month=${month}&year=${year}`);
+                if (!response.ok) throw new Error();
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Reporte_${month}_${year}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                showStatus('✅ PDF descargado', 'success');
+            } catch (e) {
+                showStatus('❌ Error al descargar', 'error');
+            } finally {
+                toggleLoading('download', false);
+            }
+        }
+
+        async function sendEmail() {
+            const month = document.getElementById('month').value;
+            const year = document.getElementById('year').value;
+            const email = document.getElementById('email').value;
+            if (!email) return showStatus('⚠️ Ingresa un email', 'error');
+
+            toggleLoading('email', true);
+            try {
+                const res = await fetch(`${API_URL}/reports/send-email?month=${month}&year=${year}&email=${email}`);
+                const data = await res.json();
+                if (data.success) showStatus(`✅ Enviado a ${email}`, 'success');
+                else throw new Error();
+            } catch (e) {
+                showStatus('❌ Error al enviar', 'error');
+            } finally {
+                toggleLoading('email', false);
+            }
+        }
+    </script>
+</body>
+</html>
