@@ -5,6 +5,7 @@ import { ReportsController } from './reports.controller';
 import { CloudbedsModule } from '../cloudbeds/cloudbeds.module';
 import { MailModule } from '../mail/mail.module';
 import { MailService } from '../mail/mail.service';
+import { ReportsCron } from './reports.cron';
 
 @Module({
   imports: [CloudbedsModule, MailModule],
@@ -12,7 +13,8 @@ import { MailService } from '../mail/mail.service';
   providers: [
     ReportsService, 
     ReportPdfService,
-    MailService
+    MailService,
+    ReportsCron
   ], 
 })
 export class ReportsModule {}

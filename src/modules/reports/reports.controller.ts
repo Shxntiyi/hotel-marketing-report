@@ -1,6 +1,6 @@
 import { Controller, Get, Query, Res } from '@nestjs/common';
-import { ReportsService } from './reports.service';
 import type { Response } from 'express';
+import { ReportsService } from './reports.service';
 import { ReportPdfService } from './report-pdf.service';
 import { MailService } from '../mail/mail.service';
 
@@ -12,45 +12,34 @@ export class ReportsController {
     private readonly mailService: MailService
   ) { }
 
-  @Get('preview')
-  async getPreview(@Query('month') month: number, @Query('year') year: number) {
-    // Ejemplo: /reports/preview?month=11&year=2024
-    return this.reportsService.generateMonthlyReport(year, month);
-  }
-
+  // Descargar PDF manualmente (Por mes)
   @Get('download')
   async downloadReport(
     @Query('month') month: number,
     @Query('year') year: number,
     @Res() res: Response
   ) {
-    // 1. Obtener datos crudos
     const data = await this.reportsService.generateMonthlyReport(year, month);
+    const pdfBuffer = await this.reportPdfService.generatePdf(data);
 
-    // 2. Generar PDF (ahora devuelve un Buffer)
-    const buffer = await this.reportPdfService.generatePdf(data);
-
-    // 3. Configurar headers y enviar respuesta
-    const fileName = `Reporte_${data.period.replace(' ', '_')}.pdf`;
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${fileName}"`,
-      'Content-Length': buffer.length.toString(),
+      'Content-Disposition': `attachment; filename="Reporte.pdf"`,
+      'Content-Length': pdfBuffer.length,
     });
-
-    res.end(buffer);
+    res.send(pdfBuffer);
   }
 
+  // Forzar envío de email (Por mes)
   @Get('send-email')
   async sendEmailReport(
-    @Query('month') month: number, 
+    @Query('month') month: number,
     @Query('year') year: number,
-    @Query('email') email: string // A quien se lo enviamos
+    @Query('email') email: string
   ) {
     const data = await this.reportsService.generateMonthlyReport(year, month);
     const pdfBuffer = await this.reportPdfService.generatePdf(data);
-    
-    // Enviamos el correo
+
     await this.mailService.sendReport(email, pdfBuffer, data.period);
 
     return { success: true, message: `Reporte enviado a ${email}` };

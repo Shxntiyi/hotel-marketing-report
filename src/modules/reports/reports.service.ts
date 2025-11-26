@@ -5,83 +5,95 @@ import dayjs from 'dayjs';
 
 @Injectable()
 export class ReportsService {
-    private readonly logger = new Logger(ReportsService.name);
+  private readonly logger = new Logger(ReportsService.name);
 
-    // CONFIGURACIÓN
-    // Cuando termines las pruebas, cambia 'Walk-In' por el nombre real (ej: 'Agencia_Marketing')
-     private readonly TARGET_SOURCES = [
+  // CONFIGURACIÓN: Lista exacta de fuentes que usa tu cliente
+  private readonly TARGET_SOURCES = [
     'Google ADS',
     'Google SEO Organico',
     'Social Media Organico',
     'Facebook ADS'
-  ]; 
-    private readonly COMMISSION_RATE = 0.05;
+  ];
+  
+  private readonly COMMISSION_RATE = 0.05; // 5%
 
-    constructor(private readonly cloudbedsService: CloudbedsService) { }
+  constructor(private readonly cloudbedsService: CloudbedsService) {}
 
-    async generateMonthlyReport(year: number, month: number): Promise<MonthlyReport> {
-        // 1. Definir rango de fechas (Inicio y Fin de mes)
-        const startDate = dayjs(`${year}-${month}-01`).format('YYYY-MM-DD');
-        const endDate = dayjs(`${year}-${month}-01`).endOf('month').format('YYYY-MM-DD');
+  // 1. MÉTODO PRINCIPAL (Por fechas personalizadas)
+  async generateReportByDates(startDate: string, endDate: string, titlePeriod: string): Promise<MonthlyReport> {
+    
+    this.logger.log(`Generando reporte rango: ${startDate} al ${endDate}`);
 
-        this.logger.log(`Generando reporte para: ${startDate} al ${endDate}`);
+    // Obtenemos el listado general (Resumen)
+    const response = await this.cloudbedsService.getReservationsByCheckOut(startDate, endDate);
+    const allReservations = response.data || [];
 
-        // 2. Obtener lista de reservas (Resumen sin precios detallados)
-        const response = await this.cloudbedsService.getReservationsByCheckOut(startDate, endDate);
-        const allReservations = response.data || [];
+    const reportItems: ReportItem[] = [];
+    let totalSales = 0;
+    let totalCommission = 0;
 
-        const reportItems: ReportItem[] = [];
-        let totalSales = 0;
-        let totalCommission = 0;
+    for (const res of allReservations) {
+      
+      const currentSource = res.sourceName || 'Direct';
 
-        // 3. Iterar y filtrar
-        for (const res of allReservations) {
+      // Verificamos si la fuente está en nuestra lista permitida
+      if (this.TARGET_SOURCES.includes(currentSource)) {
+        
+        try {
+            // Pedimos el detalle financiero completo
+            const detailResponse = await this.cloudbedsService.getReservationDetails(res.reservationID);
+            const fullDetails = detailResponse.data || {};
 
-            const currentSource = res.sourceName || 'Direct';
+            // Buscamos el dinero (total global o suma de habitaciones)
+            let reservationTotal = 0;
 
-            // Si coincide con nuestra fuente objetivo...
-            if (this.TARGET_SOURCES.includes(currentSource)) {
-
-                try {
-                    // 4. ¡MAGIA! Pedimos el detalle completo para obtener el PRECIO REAL
-                    // Esta llamada es necesaria porque el endpoint de lista devuelve total: 0
-                    const detailResponse = await this.cloudbedsService.getReservationDetails(res.reservationID);
-                    const fullDetails = detailResponse.data || {};
-
-                    // 5. Extraer el monto total (Cloudbeds suele mandarlo como string o number)
-                    const rawTotal = fullDetails.total || fullDetails.grandTotal || '0';
-                    const amount = parseFloat(rawTotal.toString());
-
-                    const commission = amount * this.COMMISSION_RATE;
-
-                    const item: ReportItem = {
-                        reservationId: res.reservationID,
-                        guestName: res.guestName,
-                        checkIn: res.startDate,
-                        checkOut: res.endDate,
-                        source: currentSource,
-                        subtotal: amount,     // Monto real obtenido del detalle
-                        grandTotal: amount,   // Monto real obtenido del detalle
-                        commission: commission
-                    };
-
-                    reportItems.push(item);
-                    totalSales += amount;
-                    totalCommission += commission;
-
-                } catch (error) {
-                    this.logger.error(`Error obteniendo precio para reserva ${res.reservationID}:`, error.message);
-                }
+            if (fullDetails.total && parseFloat(fullDetails.total) > 0) {
+               reservationTotal = parseFloat(fullDetails.total);
+            } 
+            else if (fullDetails.rooms && Array.isArray(fullDetails.rooms)) {
+               reservationTotal = fullDetails.rooms.reduce((sum, room) => {
+                 return sum + parseFloat(room.total || '0');
+               }, 0);
             }
-        }
 
-        // 6. Retornar reporte final
-        return {
-            period: dayjs(`${year}-${month}-01`).format('MMMM YYYY'),
-            generatedAt: new Date(),
-            items: reportItems,
-            totalSales,
-            totalCommission
-        };
+            const commission = reservationTotal * this.COMMISSION_RATE;
+
+            const item: ReportItem = {
+              reservationId: res.reservationID,
+              guestName: res.guestName,
+              checkIn: res.startDate,
+              checkOut: res.endDate,
+              source: currentSource, // Guardamos si fue FB, Google, etc.
+              subtotal: reservationTotal,
+              grandTotal: reservationTotal,
+              commission: commission
+            };
+
+            reportItems.push(item);
+            totalSales += reservationTotal;
+            totalCommission += commission;
+
+        } catch (error) {
+            this.logger.error(`Error procesando reserva ${res.reservationID}`, error.message);
+        }
+      }
     }
+
+    return {
+      period: titlePeriod,
+      generatedAt: new Date(),
+      items: reportItems,
+      totalSales,
+      totalCommission
+    };
+  }
+
+  // 2. MÉTODO WRAPPER (Para compatibilidad con endpoints mensuales manuales)
+  async generateMonthlyReport(year: number, month: number): Promise<MonthlyReport> {
+    const startDate = dayjs(`${year}-${month}-01`).startOf('month').format('YYYY-MM-DD');
+    const endDate = dayjs(`${year}-${month}-01`).endOf('month').format('YYYY-MM-DD');
+    const periodTitle = dayjs(`${year}-${month}-01`).format('MMMM YYYY');
+
+    return this.generateReportByDates(startDate, endDate, periodTitle);
+  }
 }
