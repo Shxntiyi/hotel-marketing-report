@@ -1,33 +1,38 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { MailerService } from '@nestjs-modules/mailer';
+import { ConfigService } from '@nestjs/config';
+import { Resend } from 'resend';
 
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
+  private resend: Resend;
 
-  constructor(private readonly mailerService: MailerService) {}
+  constructor(private configService: ConfigService) {
+    this.resend = new Resend(this.configService.get('RESEND_API_KEY'));
+  }
 
-  async sendReport(emailTo: string, pdfBuffer: Buffer, monthName: string) {
+  async sendEmail(to: string, subject: string, html: string, attachments?: any[]) {
     try {
-      await this.mailerService.sendMail({
-        to: emailTo,
-        subject: `📊 Reporte de Comisiones - ${monthName}`,
-        html: `
-          <h3>Hola!</h3>
-          <p>Adjunto encontrarás el reporte de comisiones generado automáticamente.</p>
-          <p>Por favor revisa el PDF adjunto.</p>
-          <br>
-          <small>Sistema automático del Hotel</small>
-        `,
-        attachments: [
-          {
-            filename: `Reporte_${monthName}.pdf`,
-            content: pdfBuffer,
-            contentType: 'application/pdf',
-          },
-        ],
+      const attachmentsFormatted = attachments?.map(att => ({
+        filename: att.filename,
+        content: att.content, // Buffer o base64
+      }));
+
+      const { data, error } = await this.resend.emails.send({
+        from: 'Reportes Hotel <onboarding@resend.dev>', // Usa tu dominio verificado
+        to: [to],
+        subject: subject,
+        html: html,
+        attachments: attachmentsFormatted,
       });
-      this.logger.log(`Email enviado exitosamente a ${emailTo}`);
+
+      if (error) {
+        this.logger.error('Error enviando email con Resend', error);
+        throw error;
+      }
+
+      this.logger.log(`Email enviado exitosamente a ${to}`);
+      return data;
     } catch (error) {
       this.logger.error('Error enviando email', error);
       throw error;
