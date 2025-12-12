@@ -8,22 +8,28 @@ import { MailService } from './mail.service';
     MailerModule.forRootAsync({
       useFactory: async (config: ConfigService) => ({
         transport: {
-          // 1. Usamos el servicio predefinido (maneja puertos y seguridad solo)
-          service: 'gmail', 
-          
+          host: 'smtp.gmail.com',
+          port: 587, // Puerto para STARTTLS
+          secure: false, // false para puerto 587, true para 465
           auth: {
             user: config.get('MAIL_USER'),
             pass: config.get('MAIL_PASS'),
           },
+          tls: {
+            rejectUnauthorized: false, // Para evitar problemas con certificados en la nube
+          },
+          // Timeouts aumentados para conexiones lentas
+          connectionTimeout: 60000, // 60 segundos
+          greetingTimeout: 30000,   // 30 segundos
+          socketTimeout: 60000,     // 60 segundos
           
-          // 2. ESTA ES LA CLAVE DEL ARREGLO:
-          // Forzamos el uso de IPv4. Node a veces intenta IPv6 en la nube y falla.
-          family: 4, 
+          // Forzar IPv4
+          family: 4,
           
-          // Opciones extra de seguridad
-          ignoreTLS: false,
-          secure: true, 
-          pool: true, // Reutiliza conexiones para ser más eficiente
+          // Pool de conexiones
+          pool: true,
+          maxConnections: 5,
+          maxMessages: 100,
         },
         defaults: {
           from: `"Reportes Hotel" <${config.get('MAIL_USER')}>`,
