@@ -8,13 +8,16 @@ import { MailService } from './mail.service';
     MailerModule.forRootAsync({
       useFactory: async (config: ConfigService) => ({
         transport: {
-          host: config.get('MAIL_HOST'), // smtp.gmail.com
-          secure: true, // true para puerto 465
-          port: 465,
+          host: config.get('MAIL_HOST') || 'smtp.gmail.com', 
+          secure: false, 
+          port: 587,     
           auth: {
             user: config.get('MAIL_USER'),
-            pass: config.get('MAIL_PASS'), // App Password de Gmail
+            pass: config.get('MAIL_PASS'),
           },
+          tls: {
+            rejectUnauthorized: false 
+          }
         },
         defaults: {
           from: `"Reportes Hotel" <${config.get('MAIL_USER')}>`,
