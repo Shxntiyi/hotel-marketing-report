@@ -10,9 +10,12 @@ export class ReportsService {
   // CONFIGURACIÓN: Lista exacta de fuentes que usa tu cliente
   private readonly TARGET_SOURCES = [
     'Google ADS',
-    'Google SEO Organico',
-    'Social Media Organico',
-    'Facebook ADS'
+    'Facebook ADS',
+    'Social',
+    'Google Hotel Ads',
+    'Google',
+    'Instagram',
+    'Facebook'
   ];
   
   private readonly COMMISSION_RATE = 0.05; // 5%
