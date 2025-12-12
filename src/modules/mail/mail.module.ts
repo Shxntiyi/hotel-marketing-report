@@ -8,16 +8,22 @@ import { MailService } from './mail.service';
     MailerModule.forRootAsync({
       useFactory: async (config: ConfigService) => ({
         transport: {
-          host: config.get('MAIL_HOST') || 'smtp.gmail.com', 
-          secure: false, 
-          port: 587,     
+          // 1. Usamos el servicio predefinido (maneja puertos y seguridad solo)
+          service: 'gmail', 
+          
           auth: {
             user: config.get('MAIL_USER'),
             pass: config.get('MAIL_PASS'),
           },
-          tls: {
-            rejectUnauthorized: false 
-          }
+          
+          // 2. ESTA ES LA CLAVE DEL ARREGLO:
+          // Forzamos el uso de IPv4. Node a veces intenta IPv6 en la nube y falla.
+          family: 4, 
+          
+          // Opciones extra de seguridad
+          ignoreTLS: false,
+          secure: true, 
+          pool: true, // Reutiliza conexiones para ser más eficiente
         },
         defaults: {
           from: `"Reportes Hotel" <${config.get('MAIL_USER')}>`,
