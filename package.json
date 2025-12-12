@@ -28,13 +28,13 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/schedule": "^6.0.1",
     "@nestjs/serve-static": "^5.0.4",
+    "@sendgrid/mail": "^8.1.6",
     "axios": "^1.13.2",
     "dayjs": "^1.11.19",
     "nodemailer": "^7.0.10",
     "pdfkit": "^0.17.2",
     "pdfkit-table": "^0.1.99",
     "reflect-metadata": "^0.2.2",
-    "resend": "^6.6.0",
     "rxjs": "^7.8.2"
   },
   "devDependencies": {

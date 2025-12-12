@@ -1,46 +1,52 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Resend } from 'resend';
+import * as sgMail from '@sendgrid/mail';
 
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
-  private resend: Resend;
 
   constructor(private configService: ConfigService) {
-    this.resend = new Resend(this.configService.get('RESEND_API_KEY'));
+    const apiKey = this.configService.get('SENDGRID_API_KEY');
+    if (!apiKey) {
+      this.logger.warn('SENDGRID_API_KEY no configurada');
+    } else {
+      sgMail.setApiKey(apiKey);
+      this.logger.log('SendGrid configurado correctamente');
+    }
   }
 
   async sendReport(email: string, pdfBuffer: Buffer, period: string) {
     try {
       this.logger.log(`Intentando enviar reporte a ${email}`);
 
-      const { data, error } = await this.resend.emails.send({
-        from: 'Reportes Hotel <onboarding@resend.dev>', // Cambiar cuando tengas dominio verificado
-        to: [email],
+      const msg = {
+        to: email,
+        from: this.configService.get('SENDGRID_FROM_EMAIL'), // Email verificado en SendGrid
         subject: `Reporte Mensual - ${period}`,
         html: `
-          <h2>Reporte Mensual del Hotel</h2>
-          <p>Adjunto encontrarás el reporte correspondiente al período: <strong>${period}</strong></p>
-          <p>Saludos cordiales,<br/>Sistema de Reportes</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333;">Reporte Mensual del Hotel</h2>
+            <p>Adjunto encontrarás el reporte correspondiente al período: <strong>${period}</strong></p>
+            <p style="margin-top: 20px;">Saludos cordiales,<br/>Sistema de Reportes</p>
+          </div>
         `,
         attachments: [
           {
+            content: pdfBuffer.toString('base64'),
             filename: `Reporte-${period}.pdf`,
-            content: pdfBuffer,
+            type: 'application/pdf',
+            disposition: 'attachment',
           },
         ],
-      });
+      };
 
-      if (error) {
-        this.logger.error('Error enviando email con Resend', error);
-        throw error;
-      }
-
+      await sgMail.send(msg);
       this.logger.log(`Email enviado exitosamente a ${email}`);
-      return data;
+      
+      return { success: true, message: `Email enviado a ${email}` };
     } catch (error) {
-      this.logger.error('Error enviando email', error);
+      this.logger.error('Error enviando email', error.response?.body || error);
       throw error;
     }
   }
@@ -49,25 +55,24 @@ export class MailService {
   async sendEmail(to: string, subject: string, html: string, attachments?: any[]) {
     try {
       const attachmentsFormatted = attachments?.map(att => ({
+        content: att.content.toString('base64'),
         filename: att.filename,
-        content: att.content,
+        type: att.contentType || 'application/pdf',
+        disposition: 'attachment',
       }));
 
-      const { data, error } = await this.resend.emails.send({
-        from: 'Reportes Hotel <onboarding@resend.dev>',
-        to: [to],
+      const msg = {
+        to: to,
+        from: this.configService.get('SENDGRID_FROM_EMAIL'),
         subject: subject,
         html: html,
         attachments: attachmentsFormatted,
-      });
+      };
 
-      if (error) {
-        this.logger.error('Error enviando email', error);
-        throw error;
-      }
-
+      await sgMail.send(msg);
       this.logger.log(`Email enviado exitosamente a ${to}`);
-      return data;
+      
+      return { success: true };
     } catch (error) {
       this.logger.error('Error enviando email', error);
       throw error;
