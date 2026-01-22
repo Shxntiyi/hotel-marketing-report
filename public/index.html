@@ -7,40 +7,39 @@
     <style>
         /* --- VARIABLES DE TEMA --- */
         :root {
-            /* Colores Light Mode */
             --bg-color: #f8fafc;
             --text-main: #1e293b;
             --text-muted: #64748b;
-            --card-bg: rgba(255, 255, 255, 0.65); /* Transparente para efecto vidrio */
+            --card-bg: rgba(255, 255, 255, 0.65);
             --card-border: rgba(255, 255, 255, 0.8);
             --input-bg: rgba(255, 255, 255, 0.8);
             --input-border: transparent;
             --primary: #6366f1;
             --primary-text: #ffffff;
-            --blob-1: #c7d2fe; /* Azul suave */
-            --blob-2: #fbcfe8; /* Rosa suave */
-            
-            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            --blob-1: #c7d2fe;
+            --blob-2: #fbcfe8;
+            --term-bg: #1e1e1e;
+            --term-text: #a9ff68;
+            --term-border: rgba(0,0,0,0.1);
         }
 
         [data-theme="dark"] {
-            /* Colores Dark Mode */
             --bg-color: #0f172a;
             --text-main: #f1f5f9;
             --text-muted: #94a3b8;
-            --card-bg: rgba(30, 41, 59, 0.60); /* Vidrio oscuro */
+            --card-bg: rgba(30, 41, 59, 0.60);
             --card-border: rgba(255, 255, 255, 0.1);
             --input-bg: rgba(15, 23, 42, 0.6);
             --input-border: rgba(255, 255, 255, 0.1);
             --primary: #818cf8;
             --primary-text: #0f172a;
-            --blob-1: #4338ca; /* Azul intenso */
-            --blob-2: #be185d; /* Rosa intenso */
-            
-            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --blob-1: #4338ca;
+            --blob-2: #be185d;
+            --term-bg: #000000;
+            --term-text: #00ff00;
+            --term-border: rgba(255,255,255,0.2);
         }
 
-        /* --- ESTILOS GENERALES --- */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-color);
@@ -49,12 +48,11 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden; /* Para que los blobs no estiren la página */
+            overflow: hidden;
             transition: background-color 0.5s ease;
             position: relative;
         }
 
-        /* --- EFECTO DE FONDO (BLOBS) --- */
         .background-blobs {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -65,197 +63,52 @@
         .blob {
             position: absolute;
             border-radius: 50%;
-            filter: blur(80px); /* EL EFECTO BLUR FUERTE */
+            filter: blur(80px);
             opacity: 0.6;
-            transition: all 1s ease;
             animation: float 10s infinite ease-in-out alternate;
         }
+        .blob-1 { width: 400px; height: 400px; background: var(--blob-1); top: -100px; left: -100px; }
+        .blob-2 { width: 300px; height: 300px; background: var(--blob-2); bottom: -50px; right: -50px; animation-delay: -5s; }
+        @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(30px, 50px); } }
 
-        .blob-1 {
-            width: 400px; height: 400px;
-            background: var(--blob-1);
-            top: -100px; left: -100px;
-        }
-
-        .blob-2 {
-            width: 300px; height: 300px;
-            background: var(--blob-2);
-            bottom: -50px; right: -50px;
-            animation-delay: -5s;
-        }
-
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(30px, 50px) scale(1.1); }
-        }
-
-        /* --- TARJETA GLASSMORPHISM --- */
         .card {
-            width: 100%;
-            max-width: 400px;
-            padding: 40px;
-            border-radius: 32px;
-            
-            /* LA MAGIA DEL VIDRIO */
-            background: var(--card-bg);
-            backdrop-filter: blur(20px); /* Desenfoca lo que está detrás */
-            -webkit-backdrop-filter: blur(20px);
+            width: 100%; max-width: 420px; padding: 35px;
+            border-radius: 32px; background: var(--card-bg);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--card-border);
-            box-shadow: var(--shadow);
-            
-            color: var(--text-main);
-            transition: all 0.3s ease;
-            position: relative;
+            color: var(--text-main); position: relative;
+            max-height: 90vh; overflow-y: auto;
         }
 
-        /* --- HEADER & TOGGLE --- */
-        .header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 30px;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.4rem;
-            font-weight: 700;
-        }
-
-        .subtitle {
-            margin: 5px 0 0;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        /* Botón de cambio de tema */
-        .theme-toggle {
-            background: var(--input-bg);
-            border: 1px solid var(--card-border);
-            color: var(--text-main);
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
+        .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
+        h1 { margin: 0; font-size: 1.4rem; font-weight: 700; }
+        .subtitle { margin: 5px 0 0; font-size: 0.85rem; color: var(--text-muted); }
+        .theme-toggle { background: var(--input-bg); border: 1px solid var(--card-border); color: var(--text-main); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         
-        .theme-toggle:hover { transform: scale(1.1); }
-        .theme-toggle svg { width: 20px; height: 20px; fill: currentColor; }
-
-        /* --- FORMULARIOS --- */
-        .control-group { margin-bottom: 20px; }
-        
-        label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
-
+        .control-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
         .row { display: flex; gap: 15px; }
+        input, select { width: 100%; padding: 12px; border-radius: 12px; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-main); outline: none; box-sizing: border-box; }
 
-        input, select {
-            width: 100%;
-            padding: 14px;
-            border-radius: 16px;
-            background: var(--input-bg);
-            border: 1px solid var(--input-border);
-            color: var(--text-main);
-            font-size: 0.95rem;
-            outline: none;
-            box-sizing: border-box;
-            transition: 0.3s;
-        }
-
-        input:focus, select:focus {
-            box-shadow: 0 0 0 2px var(--primary);
-            border-color: var(--primary);
-        }
-
-        /* --- BOTONES --- */
-        .btn {
-            width: 100%;
-            padding: 16px;
-            border-radius: 18px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            transition: transform 0.1s, opacity 0.2s;
-        }
-
-        .btn:active { transform: scale(0.98); }
-
-        .btn-primary {
-            background: var(--primary);
-            color: var(--primary-text);
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-        }
+        .btn { width: 100%; padding: 14px; border-radius: 14px; font-weight: 600; cursor: pointer; border: none; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-primary { background: var(--primary); color: var(--primary-text); }
+        .btn-secondary { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--card-border); }
         
-        .btn-secondary {
-            background: var(--input-bg);
-            color: var(--text-main);
-            border: 1px solid var(--card-border);
-        }
-
-        /* --- NOTIFICACIONES --- */
-        #status {
-            padding: 15px;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            text-align: center;
-            display: none;
-            margin-top: 10px;
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        .success { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
-        .error { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
-        
-        /* Spinner */
-        .spinner {
-            width: 18px; height: 18px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: currentColor;
-            animation: spin 0.8s linear infinite;
-            display: none;
-        }
+        /* CONSOLA */
+        .console-container { margin-top: 20px; background: var(--term-bg); border-radius: 12px; padding: 15px; border: 1px solid var(--term-border); font-family: monospace; font-size: 0.8rem; color: var(--term-text); height: 150px; overflow-y: auto; display: flex; flex-direction: column; }
+        .log-entry { margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .log-entry.error { color: #ff5555; }
+        .log-entry.success { color: #50fa7b; font-weight: bold; }
+        .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: currentColor; animation: spin 0.8s linear infinite; display: none; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
     </style>
 </head>
 <body>
-
-    <!-- Blobs de fondo para el efecto borroso -->
-    <div class="background-blobs">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-    </div>
-
+    <div class="background-blobs"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
     <div class="card">
         <div class="header-row">
-            <div>
-                <h1>Panel de Reportes</h1>
-                <p class="subtitle">Gestión de Comisiones Marketing</p>
-            </div>
-            <!-- Botón Dark/Light Mode -->
-            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">
-                <svg id="icon-moon" viewBox="0 0 24 24" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                <svg id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-            </button>
+            <div><h1>Panel de Reportes</h1><p class="subtitle">Monitor de Procesos</p></div>
+            <button class="theme-toggle" onclick="toggleTheme()">🌗</button>
         </div>
 
         <div class="control-group">
@@ -263,18 +116,10 @@
                 <div style="flex: 2;">
                     <label>Mes</label>
                     <select id="month">
-                        <option value="1">Enero</option>
-                        <option value="2">Febrero</option>
-                        <option value="3">Marzo</option>
-                        <option value="4">Abril</option>
-                        <option value="5">Mayo</option>
-                        <option value="6">Junio</option>
-                        <option value="7">Julio</option>
-                        <option value="8">Agosto</option>
-                        <option value="9">Septiembre</option>
-                        <option value="10">Octubre</option>
-                        <option value="11">Noviembre</option>
-                        <option value="12">Diciembre</option>
+                        <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+                        <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+                        <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+                        <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
                     </select>
                 </div>
                 <div style="flex: 1;">
@@ -286,117 +131,102 @@
 
         <div class="control-group">
             <label>Enviar copia a (Email)</label>
-            <input type="email" id="email" placeholder="Dejar vacío para usar correo predeterminado">
+            <input type="email" id="email" placeholder="Opcional: correo@ejemplo.com">
         </div>
 
         <button class="btn btn-primary" onclick="downloadPDF()">
-            <span class="spinner" id="spin-download"></span>
-            <span id="txt-download">Descargar PDF</span>
+            <span class="spinner" id="spin-download"></span><span id="txt-download">Descargar Reporte</span>
         </button>
 
         <button class="btn btn-secondary" onclick="sendEmail()">
-            <span class="spinner" id="spin-email"></span>
-            <span id="txt-email">Enviar por Email</span>
+            <span class="spinner" id="spin-email"></span><span id="txt-email">Enviar por Email</span>
         </button>
 
-        <div id="status"></div>
+        <div class="console-container" id="console-box">
+            <div class="log-entry">System: Esperando comandos...</div>
+        </div>
     </div>
 
     <script>
-        // --- LÓGICA DE TEMA (DARK/LIGHT) ---
-        function toggleTheme() {
-            const html = document.documentElement;
-            const current = html.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', next);
-            updateIcon(next);
-            localStorage.setItem('theme', next); // Guardar preferencia
-        }
-
-        function updateIcon(theme) {
-            document.getElementById('icon-sun').style.display = theme === 'dark' ? 'none' : 'block';
-            document.getElementById('icon-moon').style.display = theme === 'dark' ? 'block' : 'none';
-        }
-
-        // Cargar preferencia guardada
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        updateIcon(savedTheme);
-
-
-        // --- LÓGICA DEL APP ---
+        const API_URL = '';
         const today = new Date();
         document.getElementById('month').value = today.getMonth() + 1;
         document.getElementById('year').value = today.getFullYear();
-        const API_URL = ''; // Relativo al dominio actual
 
-        function showStatus(msg, type) {
-            const el = document.getElementById('status');
-            el.style.display = 'block';
-            el.className = type;
-            el.innerText = msg;
-            setTimeout(() => el.style.display = 'none', 5000);
+        // --- CONEXIÓN SSE ---
+        let eventSource = null;
+        function connectToLogs() {
+            if (eventSource) return;
+            eventSource = new EventSource(`${API_URL}/reports/events`);
+            eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                addLog(data.message);
+            };
+        }
+        
+        function addLog(msg) {
+            const box = document.getElementById('console-box');
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            if(msg.includes('Error')) div.className += ' error';
+            if(msg.includes('✅') || msg.includes('Completo')) div.className += ' success';
+            div.textContent = `> ${msg}`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
 
-        function toggleLoading(btnType, isLoading) {
-            const btn = btnType === 'download' ? document.querySelector('.btn-primary') : document.querySelector('.btn-secondary');
-            const txt = document.getElementById(`txt-${btnType}`);
-            const spin = document.getElementById(`spin-${btnType}`);
-
-            if (isLoading) {
-                btn.style.opacity = 0.7;
-                btn.style.pointerEvents = 'none';
-                txt.style.display = 'none';
-                spin.style.display = 'block';
-            } else {
-                btn.style.opacity = 1;
-                btn.style.pointerEvents = 'auto';
-                txt.style.display = 'block';
-                spin.style.display = 'none';
-            }
-        }
-
+        // --- DESCARGAR ---
         async function downloadPDF() {
-            const month = document.getElementById('month').value;
-            const year = document.getElementById('year').value;
+            const m = document.getElementById('month').value;
+            const y = document.getElementById('year').value;
             toggleLoading('download', true);
+            clearLog(); addLog(`🚀 Iniciando descarga PDF (${m}/${y})...`);
+            connectToLogs();
 
             try {
-                const response = await fetch(`${API_URL}/reports/download?month=${month}&year=${year}`);
-                if (!response.ok) throw new Error();
-                const blob = await response.blob();
+                const res = await fetch(`${API_URL}/reports/download?month=${m}&year=${y}`);
+                if (!res.ok) throw new Error('Error en descarga');
+                const blob = await res.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url;
-                a.download = `Reporte_${month}_${year}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                showStatus('✅ PDF descargado', 'success');
-            } catch (e) {
-                showStatus('❌ Error al descargar', 'error');
-            } finally {
-                toggleLoading('download', false);
-            }
+                a.href = url; a.download = `Reporte_${m}_${y}.pdf`;
+                document.body.appendChild(a); a.click(); a.remove();
+                addLog('✅ PDF Guardado en tu equipo.');
+            } catch (e) { addLog('❌ Error: ' + e.message); }
+            finally { toggleLoading('download', false); }
         }
 
+        // --- ENVIAR EMAIL ---
         async function sendEmail() {
-            const month = document.getElementById('month').value;
-            const year = document.getElementById('year').value;
+            const m = document.getElementById('month').value;
+            const y = document.getElementById('year').value;
             const email = document.getElementById('email').value;
-
             toggleLoading('email', true);
+            clearLog(); addLog(`📧 Preparando envío a ${email || 'Admin'}...`);
+            connectToLogs();
+
             try {
-                const res = await fetch(`${API_URL}/reports/send-email?month=${month}&year=${year}&email=${email}`);
+                const res = await fetch(`${API_URL}/reports/send-email?month=${m}&year=${y}&email=${email}`);
                 const data = await res.json();
-                if (data.success) showStatus(`✅ Enviado a ${email}`, 'success');
-                else throw new Error();
-            } catch (e) {
-                showStatus('❌ Error al enviar', 'error');
-            } finally {
-                toggleLoading('email', false);
-            }
+                if (data.success) addLog(`✅ Email enviado exitosamente.`);
+                else throw new Error(data.message);
+            } catch (e) { addLog('❌ Error envío: ' + e.message); }
+            finally { toggleLoading('email', false); }
         }
+
+        function toggleLoading(type, isLoading) {
+            const btn = type === 'download' ? document.querySelector('.btn-primary') : document.querySelector('.btn-secondary');
+            const txt = document.getElementById(`txt-${type}`);
+            const spin = document.getElementById(`spin-${type}`);
+            if (isLoading) { btn.style.opacity = 0.7; txt.style.display = 'none'; spin.style.display = 'block'; }
+            else { btn.style.opacity = 1; txt.style.display = 'block'; spin.style.display = 'none'; }
+        }
+        function clearLog() { document.getElementById('console-box').innerHTML = ''; }
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+        }
+        connectToLogs();
     </script>
 </body>
 </html>
